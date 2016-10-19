@@ -1076,7 +1076,7 @@ class Setup(object):
             return None
 
         plain_text = ''.join(lines)
-        plain_b64encoded_text = plain_text.encode('base64').strip()
+        plain_b64encoded_text = plain_text.encode('base64').translate(None, '\n').strip()
 
         if num_spaces > 0:
             plain_b64encoded_text = self.reindent(plain_b64encoded_text, num_spaces)
@@ -1508,7 +1508,7 @@ class Setup(object):
         salt = os.urandom(4)
         sha = hashlib.sha1(password)
         sha.update(salt)
-        b64encoded = '{0}{1}'.format(sha.digest(), salt).encode('base64').strip()
+        b64encoded = '{0}{1}'.format(sha.digest(), salt).encode('base64').translate(None, '\n').strip()
         encrypted_password = '{{SSHA}}{0}'.format(b64encoded)
         return encrypted_password
 
@@ -1775,7 +1775,8 @@ class Setup(object):
                 fullPath = '%s/%s' % (templateBase, templateFile)
                 try:
                     self.logIt("Rendering test template %s" % fullPath)
-                    fn = fullPath[12:] # Remove ./template/ from fullPath
+                    # Remove ./template/ and everything left of it from fullPath
+                    fn = re.match(r'(^.+/templates/)(.*$)', fullPath).groups()[1]
                     f = open(os.path.join(self.templateFolder, fn))
                     template_text = f.read()
                     f.close()
@@ -1806,7 +1807,7 @@ class Setup(object):
         try:
             plain_file = open(fn)
             plain_file_text = plain_file.read()
-            plain_file_b64encoded_text = plain_file_text.encode('base64').strip()
+            plain_file_b64encoded_text = plain_file_text.encode('base64').translate(None, '\n').strip()
             plain_file.close()
         except:
             self.logIt("Error loading file", True)
